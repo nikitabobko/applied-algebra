@@ -2,6 +2,9 @@ import functools
 
 import numpy as np
 
+global global_pm
+global_pm = None
+
 
 def gen_pow_matrix(primpoly):
     q = len(bin(primpoly)) - 3  # primpoly power
@@ -32,16 +35,19 @@ def sum(X, axis=0):
     return np.bitwise_xor.reduce(X, axis=axis)
 
 
-def prod(X, Y, pm):
-    def mult(x, y):
-        if x == 0 or y == 0:
-            return 0
-        pow = (pm[x - 1, 0] + pm[y - 1, 0]) % len(pm)
-        # if pow == 0: todo
-        #     return 1
-        return pm[pow - 1, 1]
+def prod_elem(x, y):
+    if x == 0 or y == 0:
+        return 0
+    return global_pm[(global_pm[x - 1, 0] + global_pm[y - 1, 0]) % len(global_pm) - 1, 1]
 
-    return np.vectorize(mult)(X, Y)
+
+prod_elem_vectorized = np.vectorize(prod_elem)
+
+
+def prod(X, Y, pm):
+    global global_pm
+    global_pm = pm
+    return prod_elem_vectorized(X, Y)
 
 
 def divide(X, Y, pm):
@@ -93,6 +99,7 @@ def linsolve(A, b, pm):
         cur_ans = int(divide(int(add(b[diagonal_index], prev_sum)), row[diagonal_index], pm))
         ans[diagonal_index] = cur_ans
     return ans
+
 
 def minpoly(x, pm):
     x = set(x)

@@ -23,25 +23,25 @@ class BCH:
         x[-1] = 1
         assert (gf.polydiv(x, self.g, self.pm)[1] == [0]).all()
 
+    def encode_elem(self, it):
+        n = len(self.pm)
+        m = gf.normalized_polydeg(self.g)
+        assert n - m == len(it)
+        x_pow_m = np.zeros(m + 1).astype(int)
+        x_pow_m[0] = 1
+        a = gf.polyprod(it, x_pow_m, self.pm)
+        _, mod = gf.polydiv(a, self.g, self.pm)
+        n = len(self.pm)
+        ret = gf.polyadd(a, mod)
+        ret = np.concatenate([np.zeros(n - len(ret)).astype(int), ret])
+
+        assert (gf.polydiv(ret, self.g, self.pm)[1] == [0]).all()
+        assert (gf.polyval(ret, self.R, self.pm) == [0]).all()
+
+        return ret
+
     def encode(self, U):
-        def encode_elem(it):
-            n = len(self.pm)
-            m = gf.normalized_polydeg(self.g)
-            assert n - m == len(it)
-            x_pow_m = np.zeros(m + 1).astype(int)
-            x_pow_m[0] = 1
-            a = gf.polyprod(it, x_pow_m, self.pm)
-            _, mod = gf.polydiv(a, self.g, self.pm)
-            n = len(self.pm)
-            ret = gf.polyadd(a, mod)
-            ret = np.concatenate([np.zeros(n - len(ret)).astype(int), ret])
-
-            assert (gf.polydiv(ret, self.g, self.pm)[1] == [0]).all()
-            assert (gf.polyval(ret, self.R, self.pm) == [0]).all()
-
-            return ret
-
-        return np.array(list(map(encode_elem, U)))
+        return np.array(list(map(self.encode_elem, U)))
 
     def decode(self, W, method='euclid'):
         assert method == 'euclid' or method == 'pgz'
@@ -99,15 +99,10 @@ class BCH:
         k = n - m
         cur = 1
         last = 2 ** k - 1
-        msgs = []
+        ret = np.inf
         while cur <= last:
-            msg = []
-            copy = cur
-            while copy != 0:
-                msg.insert(0, copy & 1)
-                copy >>= 1
+            msg = [int(x) for x in bin(cur)[2:]]
             msg = np.concatenate([np.zeros(k - len(msg)).astype(int), msg])
-            msgs += [msg]
+            ret = min(np.count_nonzero(self.encode([msg]), axis=1)[0], ret)
             cur += 1
-        coded = self.encode(msgs)
-        return np.min(np.count_nonzero(coded, axis=1))
+        return ret
