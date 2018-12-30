@@ -202,8 +202,7 @@ def euclid(p1, p2, pm, max_deg=0):
     E = [[np.array([1]), np.array([0])], [np.array([0]), np.array([1])]]
     # if p2_deg > max_deg:
     r_deg = p2_deg
-    r = p2
-    while r_deg >= max_deg:
+    while r_deg > max_deg:
         q, r = polydiv(p1, p2, pm)
         r_deg = normalized_polydeg(r)
         new_E = [[[], []], [[], []]]
