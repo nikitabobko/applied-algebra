@@ -54,7 +54,6 @@ class BCH:
             n = len(it)
             assert n == len(self.pm)
             t = len(self.R) // 2
-            m = gf.polydeg(self.g)
             s = gf.polyval(it, self.R, self.pm)
             if (s == 0).all():
                 return it
