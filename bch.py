@@ -12,7 +12,7 @@ class BCH:
     def __init__(self, n, t):
         q = int(math.log2(n + 1))
         assert 2 <= q <= 16
-        assert 2 ** q - 1 == n  # todo
+        assert 2 ** q - 1 == n
         assert 2 * t + 1 <= n
         self.pm = gf.gen_pow_matrix(self.primopolys[q])
         self.R = self.pm[0:(2 * t), 1]

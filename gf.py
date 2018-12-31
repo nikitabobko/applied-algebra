@@ -2,9 +2,6 @@ import functools
 
 import numpy as np
 
-global global_pm
-global_pm = None
-
 
 def gen_pow_matrix(primpoly):
     q = len(bin(primpoly)) - 3  # primpoly power
@@ -16,7 +13,6 @@ def gen_pow_matrix(primpoly):
     for i in range(1, 2 ** q):
         ret[i - 1, 1] = cur
         ret[cur - 1, 0] = i
-        # print(ret[i - 1, 0], bin(ret[i - 1, 1])) todo
         cur = cur << 1
         if (cur >> q) != 0:
             cur ^= max
@@ -29,38 +25,26 @@ def add(X, Y):
 
 
 def sum(X, axis=0):
-    # shape = list(X.shape)
-    # shape[0] = 1
-    # shape = tuple(shape)
     return np.bitwise_xor.reduce(X, axis=axis)
 
 
-def prod_elem(x, y):
-    if x == 0 or y == 0:
-        return 0
-    return global_pm[(global_pm[x - 1, 0] + global_pm[y - 1, 0]) % len(global_pm) - 1, 1]
-
-
-prod_elem_vectorized = np.vectorize(prod_elem)
-
-
 def prod(X, Y, pm):
-    global global_pm
-    global_pm = pm
-    return prod_elem_vectorized(X, Y)
+    def prod_elem(x, y):
+        if x == 0 or y == 0:
+            return 0
+        return pm[(pm[x - 1, 0] + pm[y - 1, 0]) % len(pm) - 1, 1]
+    return np.vectorize(prod_elem)(X, Y)
 
 
 def divide(X, Y, pm):
-    def div(x, y):
+    def divide_elem(x, y):
         assert y != 0
         if x == 0:
             return 0
         pow = (pm[x - 1, 0] - pm[y - 1, 0]) % len(pm)
-        # if pow == 0: todo
-        #     return 1
         return pm[pow - 1, 1]
 
-    return np.vectorize(div)(X, Y)
+    return np.vectorize(divide_elem)(X, Y)
 
 
 def swap(arr, i, j):
